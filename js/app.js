@@ -188,7 +188,7 @@
     const media = (window.MEDIA || {})[bird.id] || {};
     const { list, cite } = makeNotes(bird.sources, bird.id);
     const para = (items) => items.map((x) => `<p>${esc(x.t)}${cite(x.c)}</p>`).join('');
-    const entriesDl = (items) => `<dl class="entries">${items.map((x) => `<dt>${esc(x.w)}</dt><dd>${esc(x.m)}${cite(x.c)}</dd>`).join('')}</dl>`;
+    const entriesDl = (items) => `<dl class="entries">${items.map((x) => `<div><dt>${esc(x.w)}</dt><dd>${esc(x.m)}${cite(x.c)}</dd></div>`).join('')}</dl>`;
     const lx = bird.lexical;
 
     const sheet1 = `
@@ -321,11 +321,23 @@
   // ---------- الواجهات ----------
   const app = document.getElementById('app');
 
-  const birdLink = (e) => `<a class="bird-chip" href="#/bird/${e.curated ? e.curated.id : e.id}">
-      ${e.thumb ? `<img src="${esc(small(e.thumb))}" alt="" loading="lazy">` : '<span class="noimg" aria-hidden="true">❦</span>'}
-      <span class="nm">${esc(e.ar || e.en || e.sci)}</span>
-      <span class="rt"><bdi lang="la">${esc(e.sci)}</bdi></span>
-      ${e.curated ? '<span class="badge ok">مادة محرَّرة</span>' : ''}
+  const icon = (id, cls = 'i') => `<svg class="${cls}" aria-hidden="true"><use href="#i-${id}"/></svg>`;
+  const hrefOf = (e) => '#/bird/' + (e.curated ? e.curated.id : e.id);
+  const thumbOf = (e) => (e.curated && window.MEDIA[e.curated.id] ? window.MEDIA[e.curated.id].image.thumb : small(e.thumb));
+
+  const birdLink = (e) => `<a class="bird-card" href="${hrefOf(e)}">
+      <span class="ph">
+        ${e.thumb || e.curated ? `<img src="${esc(thumbOf(e))}" alt="" loading="lazy" decoding="async" width="250" height="188">` : `<span class="noimg">${icon('bird')}</span>`}
+        <span class="tags">
+          ${e.curated ? '<span class="tag edited">مادة محرَّرة</span>' : '<span></span>'}
+          ${e.aud || e.curated ? `<span class="tag" title="له تسجيل صوتي">${icon('sound')}<span class="sr-only">له تسجيل صوتي</span></span>` : ''}
+        </span>
+      </span>
+      <span class="body">
+        <span class="nm">${esc(e.ar || e.en || e.sci)}</span>
+        <span class="sci">${esc(e.sci)}</span>
+        ${e.iucn ? `<span class="status"><span class="dot ${e.iucn}"></span>${IUCN[e.iucn]}</span>` : ''}
+      </span>
     </a>`;
 
   function viewHome() {
@@ -333,39 +345,57 @@
     for (const e of named()) counts[e.bab] = (counts[e.bab] || 0) + 1;
     const nNamed = named().length;
     const nUn = unnamed().length;
+    // صور الواجهة: ست صور تملأ شبكة ٣×٣ (الأولى تأخذ مربعين في مربعين)
+    const featured = ['Q61865', 'hudhud', 'Q170718', 'uqab', 'Q30535', 'ghurab']
+      .map((k) => byId[k]).filter((e) => e && (e.thumb || e.curated)).slice(0, 6);
     app.innerHTML = `
       <section class="hero">
-        <p class="eyebrow">معجم موسوعي موثّق</p>
-        <h1>معجم الطيور</h1>
-        <p class="subtitle">أصواتها، وأشكالها، وصفاتها في العربية</p>
-        <p class="lead">يضم المعجم ${fmt(entries.length)} نوعًا من طيور العالم. لكل طائر صفحتان: الأولى للتعريف به وتصنيفه، والثانية لاسمه وجذره وصوته وصورته، وكل معلومة منسوبة إلى مصدرها.</p>
-        <label class="search">
-          <span class="sr-only">ابحث عن طائر</span>
-          <input id="q" type="search" placeholder="ابحث بالاسم العربي أو العلمي أو الإنجليزي…" autocomplete="off">
-        </label>
-        <div id="results" class="results" aria-live="polite"></div>
-        <dl class="stats">
-          <div><dt>أنواع الطيور</dt><dd>${fmt(entries.length)}</dd></div>
-          <div><dt>لها اسم عربي</dt><dd>${fmt(nNamed)}</dd></div>
-          <div><dt>الفصائل</dt><dd>${fmt(families.length)}</dd></div>
-          <div><dt>مواد محرَّرة لغويًا</dt><dd>${fmt(curated.length)}</dd></div>
-        </dl>
+        <div>
+          <p class="eyebrow">معجم موسوعي موثّق لطيور العالم</p>
+          <h1>معجم الطيور</h1>
+          <p class="subtitle">أصواتها، وأشكالها، وصفاتها في العربية</p>
+          <p class="lead">${fmt(entries.length)} نوعًا من طيور العالم. لكل طائر صفحتان: الأولى للتعريف به وتصنيفه، والثانية لاسمه وجذره وصوته وصورته، وكل معلومة منسوبة إلى مصدرها.</p>
+          <label class="search" for="q">
+            <span class="sr-only">ابحث عن طائر</span>
+            ${icon('search')}
+            <input id="q" type="search" placeholder="ابحث: هدهد، Upupa، hoopoe…" autocomplete="off">
+          </label>
+          <div id="results" class="results" aria-live="polite"></div>
+        </div>
+        <div class="mosaic" aria-label="طيور مختارة">
+          ${featured.map((e) => `<a href="${hrefOf(e)}"><img src="${esc(thumbOf(e).replace('/250px-', '/500px-'))}" alt="${esc(e.ar || e.sci)}" loading="lazy"><span>${esc(e.ar || e.sci)}</span></a>`).join('')}
+        </div>
       </section>
+
+      <dl class="stats">
+        <div><dt>أنواع الطيور</dt><dd>${fmt(entries.length)}</dd></div>
+        <div><dt>لها اسم عربي</dt><dd>${fmt(nNamed)}</dd></div>
+        <div><dt>الفصائل</dt><dd>${fmt(families.length)}</dd></div>
+        <div><dt>مواد محرَّرة لغويًا</dt><dd>${fmt(curated.length)}</dd></div>
+      </dl>
 
       <section class="abwab">
         <h2 class="section-title">الأبواب</h2>
-        <p class="muted">الطيور ذات الاسم العربي مرتبة كما في المعجم الوسيط: الباب للحرف الأول من الجذر، والفصل للحرف الثاني. وما لم يُحقَّق جذره رُتِّب على حروف اسمه.</p>
+        <p class="section-note">مرتبة كما في المعجم الوسيط: الباب للحرف الأول من الجذر، والفصل للحرف الثاني. وما لم يُحقَّق جذره رُتِّب على حروف اسمه.</p>
         <div class="letters">
           ${ALPHABET.map((l) => {
             const n = counts[l] || 0;
             return n
-              ? `<a class="letter" href="#/bab/${encodeURIComponent(l)}"><span class="ch">${l}</span><span class="cnt">${fmt(n)}</span></a>`
-              : `<span class="letter empty" aria-disabled="true"><span class="ch">${l}</span><span class="cnt">—</span></span>`;
+              ? `<a class="letter" href="#/bab/${encodeURIComponent(l)}" aria-label="${babName(l)}، ${fmt(n)} طائرًا"><span class="ch">${l}</span><span class="cnt">${fmt(n)}</span></a>`
+              : `<span class="letter empty" aria-label="${babName(l)}، لا مواد"><span class="ch">${l}</span><span class="cnt">—</span></span>`;
           }).join('')}
         </div>
         <div class="more-links">
-          <a class="card-link" href="#/families"><strong>التصفّح بالفصائل</strong><span>${fmt(families.length)} فصيلة مرتبة على الرتب</span></a>
-          <a class="card-link" href="#/unnamed"><strong>طيور بلا اسم عربي موثّق</strong><span>${fmt(nUn)} نوعًا، مرتبة على الفصائل</span></a>
+          <a class="card-link" href="#/families">
+            <span class="ic">${icon('tree')}</span>
+            <span><strong>التصفّح بالفصائل</strong><small>${fmt(families.length)} فصيلة مرتبة على الرتب</small></span>
+            <span class="arrow">${icon('chev')}</span>
+          </a>
+          <a class="card-link" href="#/unnamed">
+            <span class="ic">${icon('globe')}</span>
+            <span><strong>طيور بلا اسم عربي موثّق</strong><small>${fmt(nUn)} نوعًا، مرتبة على الفصائل</small></span>
+            <span class="arrow">${icon('chev')}</span>
+          </a>
         </div>
       </section>`;
 
@@ -384,7 +414,7 @@
         }
       }
       results.innerHTML = hits.length
-        ? hits.map((e) => `<a href="#/bird/${e.curated ? e.curated.id : e.id}">${esc(e.ar || e.en || e.sci)} <span class="muted"><bdi lang="la">${esc(e.sci)}</bdi></span></a>`).join('')
+        ? hits.map((e) => `<a href="${hrefOf(e)}">${esc(e.ar || e.en || e.sci)} <span class="muted"><bdi lang="la">${esc(e.sci)}</bdi></span></a>`).join('')
         : '<p class="muted">ما في نتيجة لهالبحث.</p>';
     });
   }
@@ -401,17 +431,17 @@
     app.innerHTML = `
       <nav class="crumbs"><a href="#/">الأبواب</a> / <span>${babName(letter)}</span></nav>
       <header class="page-head">
-        <h1>${babName(letter)} <span class="muted">(${fmt(list.length)})</span></h1>
-        <button type="button" class="btn" data-export="bab" data-key="${letter}">تنزيل الباب PDF</button>
+        <h1>${babName(letter)} <span class="count">${fmt(list.length)} طائرًا</span></h1>
+        <button type="button" class="btn" data-export="bab" data-key="${letter}">${icon('download')}تنزيل الباب PDF</button>
       </header>
       <nav class="fasl-index" aria-label="فصول الباب">
-        ${ordered.map(([f, l]) => `<a href="#fasl-${encodeURIComponent(f)}" data-jump="fasl-${f}">${LETTER_NAMES[f]} <span class="muted">${fmt(l.length)}</span></a>`).join('')}
+        ${ordered.map(([f, l]) => `<a href="#fasl-${encodeURIComponent(f)}" data-jump="fasl-${f}">${faslName(f)} <span class="n">${fmt(l.length)}</span></a>`).join('')}
       </nav>
       ${ordered.map(([f, l]) => `
         <section class="fasl" id="fasl-${f}">
           <header class="fasl-head">
-            <h2>${faslName(f)} <span class="muted">(${fmt(l.length)})</span></h2>
-            <button type="button" class="btn btn-ghost" data-export="fasl" data-key="${letter}${f}">تنزيل الفصل</button>
+            <h2>${faslName(f)} <span class="count">${fmt(l.length)}</span></h2>
+            <button type="button" class="btn btn-ghost" data-export="fasl" data-key="${letter}${f}">${icon('download')}تنزيل الفصل</button>
           </header>
           <div class="bird-grid">${l.map(birdLink).join('')}</div>
         </section>`).join('')}`;
@@ -431,13 +461,13 @@
     const title = onlyUnnamed ? 'طيور بلا اسم عربي موثّق' : 'الفصائل';
     app.innerHTML = `
       <nav class="crumbs"><a href="#/">الأبواب</a> / <span>${title}</span></nav>
-      <header class="page-head"><h1>${title} <span class="muted">(${fmt(pool.length)})</span></h1></header>
-      ${onlyUnnamed ? '<p class="muted">هذه أنواع ليس لها اسم عربي في المصادر المعتمدة بعد. لم نترجم أسماءها من عندنا حتى لا ننسب إليها اسمًا غير موثّق.</p>' : ''}
+      <header class="page-head"><h1>${title} <span class="count">${fmt(pool.length)} نوعًا</span></h1></header>
+      ${onlyUnnamed ? '<p class="page-meta">هذه أنواع ليس لها اسم عربي في المصادر المعتمدة بعد. لم نترجم أسماءها من عندنا حتى لا ننسب إليها اسمًا غير موثّق.</p>' : '<p class="page-meta">الفصائل مجمّعة تحت رتبها، والرقم عدد الأنواع في كل فصيلة.</p>'}
       ${[...byOrder.values()].map(({ ord, fams }) => `
-        <section class="fasl">
-          <h2 class="order-title">${esc(ord.ar || ord.sci)} <bdi lang="la" class="muted">${esc(ord.sci || '')}</bdi></h2>
+        <section class="order">
+          <h2 class="order-title">${esc(ord.ar || ord.sci)} <bdi lang="la">${esc(ord.sci || '')}</bdi></h2>
           <ul class="fam-list">
-            ${fams.map((f) => `<li><a href="#/fam/${f.id}${onlyUnnamed ? '/unnamed' : ''}">${esc(f.ar || f.sci)} <bdi lang="la" class="muted">${esc(f.sci || '')}</bdi> <span class="cnt">${fmt(count[f.id])}</span></a></li>`).join('')}
+            ${fams.map((f) => `<li><a href="#/fam/${f.id}${onlyUnnamed ? '/unnamed' : ''}"><span class="fn-ar">${esc(f.ar || f.sci)}</span><bdi lang="la">${esc(f.sci || '')}</bdi><span class="cnt">${fmt(count[f.id])}</span></a></li>`).join('')}
           </ul>
         </section>`).join('')}`;
   }
@@ -449,10 +479,10 @@
     app.innerHTML = `
       <nav class="crumbs"><a href="#/">الأبواب</a> / <a href="#/${onlyUnnamed ? 'unnamed' : 'families'}">${onlyUnnamed ? 'طيور بلا اسم عربي' : 'الفصائل'}</a> / <span>${esc(f.ar || f.sci)}</span></nav>
       <header class="page-head">
-        <h1>${esc(f.ar || f.sci)} <bdi lang="la" class="muted">${esc(f.sci || '')}</bdi></h1>
-        <button type="button" class="btn" data-export="fam" data-key="${id}${onlyUnnamed ? ':u' : ''}">تنزيل الفصيلة PDF</button>
+        <h1>${esc(f.ar || f.sci)} <span class="count"><bdi lang="la">${esc(f.sci || '')}</bdi></span></h1>
+        <button type="button" class="btn" data-export="fam" data-key="${id}${onlyUnnamed ? ':u' : ''}">${icon('download')}تنزيل الفصيلة PDF</button>
       </header>
-      <p class="muted">الرتبة: ${esc(f.ord.ar || '')} <bdi lang="la">${esc(f.ord.sci || '')}</bdi> · ${fmt(list.length)} نوعًا</p>
+      <p class="page-meta">الرتبة: ${esc(f.ord.ar || '')} <bdi lang="la">${esc(f.ord.sci || '')}</bdi> · ${fmt(list.length)} نوعًا</p>
       <div class="bird-grid">${list.map(birdLink).join('')}</div>`;
   }
 
@@ -469,12 +499,13 @@
     app.innerHTML = `
       <nav class="crumbs"><a href="#/">الأبواب</a> / ${crumbs} / <span>${esc(e.ar || e.en || e.sci)}</span></nav>
       <div class="bird-tools">
-        <button type="button" class="btn" data-export="bird" data-key="${e.id}">تنزيل صفحتي الطائر PDF</button>
+        <span class="muted">${e.curated ? 'مادة محرَّرة لغويًا' : 'مادة مجموعة آليًا من مصادر موثّقة'}</span>
+        <button type="button" class="btn" data-export="bird" data-key="${e.id}">${icon('download')}تنزيل صفحتي الطائر PDF</button>
       </div>
-      <div class="spread"><p class="muted">جارٍ التحميل…</p></div>
-      <nav class="pager">
-        ${prev ? `<a href="${link(prev)}">→ ${esc(prev.ar || prev.en || prev.sci)}</a>` : '<span></span>'}
-        ${next ? `<a href="${link(next)}">${esc(next.ar || next.en || next.sci)} ←</a>` : '<span></span>'}
+      <div class="spread"><p class="loading">جارٍ التحميل…</p></div>
+      <nav class="pager" aria-label="التنقل بين الطيور">
+        ${prev ? `<a href="${link(prev)}"><small>السابق</small><strong>${esc(prev.ar || prev.en || prev.sci)}</strong></a>` : '<span></span>'}
+        ${next ? `<a class="next" href="${link(next)}"><small>التالي</small><strong>${esc(next.ar || next.en || next.sci)}</strong></a>` : '<span></span>'}
       </nav>`;
     const html = await sheetsFor(e).catch(() => '<p class="gap">تعذّر تحميل مادة هذا الطائر. تأكد من الاتصال وحاول مرة ثانية.</p>');
     if (byId[currentBird] === e) app.querySelector('.spread').innerHTML = html;
@@ -525,6 +556,11 @@
       if (location.hash.startsWith('#fasl-') || location.hash.startsWith('#note-')) return;
       viewHome();
     } else viewNotFound();
+    const section = { bab: 'home', bird: 'home', '': 'home', families: 'families', fam: 'families', unnamed: 'families', method: 'method' }[parts[0]];
+    document.querySelectorAll('[data-nav]').forEach((a) => {
+      if (a.dataset.nav === section) a.setAttribute('aria-current', 'page');
+      else a.removeAttribute('aria-current');
+    });
     window.scrollTo(0, 0);
     app.focus({ preventScroll: true });
   }
