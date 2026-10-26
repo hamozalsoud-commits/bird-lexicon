@@ -1,0 +1,5 @@
+# ملفات وسيطة من سكربتات tools/ (بتنولّد من جديد)
+tools/*.json
+__pycache__/
+.DS_Store
+Thumbs.db

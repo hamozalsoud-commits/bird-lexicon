@@ -1,0 +1,18 @@
+PREFIX wd: <http://www.wikidata.org/entity/>
+PREFIX wdt: <http://www.wikidata.org/prop/direct/>
+PREFIX schema: <http://schema.org/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+SELECT ?s (SAMPLE(?sci) AS ?sci_) (SAMPLE(?arl) AS ?ar_) (SAMPLE(?enl) AS ?en_) (SAMPLE(?iucn) AS ?iucn_)
+ (SAMPLE(?fam) AS ?fam_) (SAMPLE(?famsci) AS ?famsci_) (SAMPLE(?famar) AS ?famar_)
+ (SAMPLE(?ord) AS ?ord_) (SAMPLE(?ordsci) AS ?ordsci_) (SAMPLE(?ordar) AS ?ordar_)
+ (SAMPLE(?img) AS ?img_) (SAMPLE(?aud) AS ?aud_) (SAMPLE(?vid) AS ?vid_) (SAMPLE(?arw) AS ?arw_) (SAMPLE(?enw) AS ?enw_)
+WHERE {
+ ?s wdt:P171+ wd:Q5113 ; wdt:P105 wd:Q7432 ; wdt:P141 ?iucn ; wdt:P225 ?sci .
+ OPTIONAL { ?s rdfs:label ?arl FILTER(LANG(?arl)="ar") }
+ OPTIONAL { ?s rdfs:label ?enl FILTER(LANG(?enl)="en") }
+ OPTIONAL { ?s wdt:P171+ ?fam . ?fam wdt:P105 wd:Q35409 ; wdt:P225 ?famsci . OPTIONAL { ?fam rdfs:label ?famar FILTER(LANG(?famar)="ar") } }
+ OPTIONAL { ?s wdt:P171+ ?ord . ?ord wdt:P105 wd:Q36602 ; wdt:P225 ?ordsci . OPTIONAL { ?ord rdfs:label ?ordar FILTER(LANG(?ordar)="ar") } }
+ OPTIONAL { ?s wdt:P18 ?img } OPTIONAL { ?s wdt:P51 ?aud } OPTIONAL { ?s wdt:P10 ?vid }
+ OPTIONAL { ?arw schema:about ?s ; schema:isPartOf <https://ar.wikipedia.org/> }
+ OPTIONAL { ?enw schema:about ?s ; schema:isPartOf <https://en.wikipedia.org/> }
+} GROUP BY ?s
