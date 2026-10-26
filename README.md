@@ -2,9 +2,18 @@
 
 معجم موسوعي موثّق لطيور العالم (11,412 نوعًا)، مرتب على الأبواب والفصول كما في المعجم الوسيط.
 
-- الموقع المنشور: https://hamozalsoud-commits.github.io/bird-lexicon/
+- الموقع المنشور: https://bird-lexicon.pages.dev/ (Cloudflare Pages)
+- نسخة ثانية: https://hamozalsoud-commits.github.io/bird-lexicon/ (GitHub Pages، بتتحدّث تلقائيًا مع كل push على `main`)
 - موقع ثابت: HTML + CSS + JavaScript، بدون أي framework أو أداة بناء.
-- النشر: GitHub Pages من فرع `main` (أي push على `main` بينشر تلقائيًا خلال دقيقة).
+
+### النشر على Cloudflare Pages (يدوي)
+
+مشروع Cloudflare مش مربوط بـ git، فبعد أي تعديل لازم تنشر بإيدك (انسخ الملفات اللي بتنعرض بس):
+
+```
+mkdir dist && cp -r index.html css js data dist/
+npx wrangler pages deploy dist --project-name bird-lexicon --branch main
+```
 
 ## التشغيل محليًا
 
