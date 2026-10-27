@@ -374,6 +374,15 @@
         <div><dt>مواد محرَّرة لغويًا</dt><dd>${fmt(curated.length)}</dd></div>
       </dl>
 
+      <a class="credit" href="#/about">
+        <img src="assets/hashemite-university.png" alt="" width="56" height="56">
+        <span>
+          <strong>إعداد الباحث أحمد محمد حفيظ السعود</strong>
+          <small>بإشراف الأستاذ الدكتور أحمد الحسن، رئيس قسم اللغة العربية وآدابها · الجامعة الهاشمية</small>
+        </span>
+        <span class="arrow">${icon('chev')}</span>
+      </a>
+
       <section class="abwab">
         <h2 class="section-title">الأبواب</h2>
         <p class="section-note">مرتبة كما في المعجم الوسيط: الباب للحرف الأول من الجذر، والفصل للحرف الثاني. وما لم يُحقَّق جذره رُتِّب على حروف اسمه.</p>
@@ -538,6 +547,43 @@
       </article>`;
   }
 
+  function viewAbout() {
+    app.innerHTML = `
+      <nav class="crumbs"><a href="#/">الأبواب</a> / <span>عن المعجم</span></nav>
+      <article class="about">
+        <header class="about-head">
+          <img src="assets/hashemite-university.png" alt="شعار الجامعة الهاشمية" width="112" height="112">
+          <div>
+            <p class="eyebrow">قسم اللغة العربية وآدابها · الجامعة الهاشمية</p>
+            <h1>عن المعجم</h1>
+            <p class="subtitle">معجم الطيور: أصواتها، وأشكالها، وصفاتها في العربية</p>
+          </div>
+        </header>
+
+        <section class="about-project">
+          <p>مشروع معجمي رقمي يجمع بين دراسة أسماء الطيور في اللغة العربية، والتعريف العلمي بأنواعها، وتوثيق أصواتها وخصائصها وصورها، مع الإفادة من المصادر اللغوية والعلمية المتخصصة.</p>
+          <p>يهدف المشروع إلى تقديم مرجع عربي رقمي يجمع بين الأصالة اللغوية والمعرفة العلمية والتقنيات التفاعلية، ويسهم في تطوير أساليب الصناعة المعجمية العربية وإتاحتها للباحثين والمهتمين.</p>
+        </section>
+
+        <div class="people">
+          <section class="person">
+            <p class="role">الباحث ومؤسس المشروع</p>
+            <h2>أحمد محمد حفيظ السعود</h2>
+            <p class="title">باحث في اللغة العربية وآدابها · مؤسس ومُعِدّ المعجم الموسوعي العربي للطيور وأصواتها</p>
+            <p>باحث في اللغة العربية وآدابها، وطالب في مرحلة الدكتوراه في قسم اللغة العربية وآدابها في الجامعة الهاشمية في الأردن، يهتم بالدراسات المعجمية والمصطلحية وتوظيف التقنيات الرقمية الحديثة في خدمة اللغة العربية.</p>
+            <p>صاحب فكرة مشروع «معجم الطيور: أصواتها، وأشكالها، وصفاتها في العربية»، ومؤسسه ومُعِدّه.</p>
+          </section>
+          <section class="person">
+            <p class="role">إشراف</p>
+            <h2>الأستاذ الدكتور أحمد الحسن</h2>
+            <p class="title">رئيس قسم اللغة العربية وآدابها · الجامعة الهاشمية</p>
+          </section>
+        </div>
+
+        <p class="about-more">لمعرفة كيف وُثّقت مادة المعجم، راجع <a href="#/method">منهج التوثيق</a>.</p>
+      </article>`;
+  }
+
   function viewNotFound() {
     app.innerHTML = '<article class="prose"><h1>الصفحة غير موجودة</h1><p><a href="#/">ارجع للأبواب</a></p></article>';
   }
@@ -552,11 +598,12 @@
     else if (parts[0] === 'unnamed') viewFamilies(true);
     else if (parts[0] === 'fam') viewFamily(parts[1], parts[2] === 'unnamed');
     else if (parts[0] === 'method') viewMethod();
+    else if (parts[0] === 'about') viewAbout();
     else if (parts[0] === '' || !location.hash.startsWith('#/')) {
       if (location.hash.startsWith('#fasl-') || location.hash.startsWith('#note-')) return;
       viewHome();
     } else viewNotFound();
-    const section = { bab: 'home', bird: 'home', '': 'home', families: 'families', fam: 'families', unnamed: 'families', method: 'method' }[parts[0]];
+    const section = { bab: 'home', bird: 'home', '': 'home', families: 'families', fam: 'families', unnamed: 'families', method: 'method', about: 'about' }[parts[0]];
     document.querySelectorAll('[data-nav]').forEach((a) => {
       if (a.dataset.nav === section) a.setAttribute('aria-current', 'page');
       else a.removeAttribute('aria-current');
